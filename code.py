@@ -1,57 +1,70 @@
 import random  # Import the random module to use its functions later
 
-# Open the file "words.txt" in read mode and assign it to variable 'f'
-f = open("words.txt", "r")
+# Function to load words from a file and return a list of words
+def load_words(filename):
+    try:
+        with open(filename, "r") as f:
+            data = f.readline().strip()
+            words = data.split()
+            if not words:
+                raise ValueError("The file is empty or no valid words found.")
+            return words
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' was not found.")
+        return []
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
 
-# Read the first line from the file and store it in the variable 'data'
-data = f.readline()
+# Function to display the current state of the guessed word
+def display_word(guessed_word):
+    print("Current word:", " ".join(guessed_word))
 
-# Split the line into individual words and store them in a list called 'words'
-words = data.split()
+# Function to get a valid guess from the user
+def get_guess(already_guessed):
+    while True:
+        guess = input("Guess a letter: ").upper()
+        if len(guess) != 1 or not guess.isalpha():
+            print("Please enter a single valid letter.")
+        elif guess in already_guessed:
+            print("You've already guessed that letter. Try again.")
+        else:
+            return guess
 
-# Randomly select a word from the 'words' list and store it in the variable 'word'
-word = random.choice(words)
+# Function to update the guessed word with the correct guessed letter
+def update_guessed_word(word, guessed_word, guess):
+    for index in range(len(word)):
+        if word[index] == guess:
+            guessed_word[index] = guess
 
-# Set the total number of chances the player has to guess the word
-total_chance = 6
+# Main game function
+def play_game(words, total_chance=6):
+    word = random.choice(words).upper()
+    guessed_word = ["-"] * len(word)
+    already_guessed = set()
 
-# Initialize 'guessed_word' with dashes ("-"), the same length as the word to guess
-guessed_word = "-" * len(word)
+    while total_chance > 0:
+        display_word(guessed_word)
+        guess = get_guess(already_guessed)
+        already_guessed.add(guess)
 
-# Begin a while loop that continues until the player runs out of chances
-while total_chance != 0:
-    # Print the current state of the guessed word (e.g., "--L--" if the word is "HELLO")
-    print(guessed_word)
-
-    # Ask the player to guess a letter and convert it to uppercase
-    letter = input("Guess a letter: ").upper()
-
-    # Check if the guessed letter is in the word
-    if letter in word:
-        # If the letter is in the word, loop through each letter in the word
-        for index in range(len(word)):
-            # If the guessed letter matches the current letter in the word
-            if word[index] == letter:
-                # Update the guessed word with the correct letter at the appropriate position
-                guessed_word = guessed_word[:index] + letter + guessed_word[index + 1:]
-        
-        # If the guessed word now matches the original word, the player has won
-        if guessed_word == word:
-            print("Congratulations you won!!!")
-            break  # Exit the loop as the game is over
+        if guess in word:
+            update_guessed_word(word, guessed_word, guess)
+            if "".join(guessed_word) == word:
+                print("Congratulations, you won!!!")
+                break
+        else:
+            total_chance -= 1
+            print("Incorrect guess.")
+            print("The remaining chances are:", total_chance)
 
     else:
-        # If the guessed letter is not in the word, decrease the total chances by 1
-        total_chance -= 1
-        print("Incorrect guess")
-        print("The remaining chances are:", total_chance)
+        print("Game over. You lose.")
+        print("The correct word was:", word)
 
-# If the player runs out of chances, the loop exits and the game is over
+# Load the words and start the game if words are available
+words = load_words("words.txt")
+if words:
+    play_game(words)
 else:
-    print("Game over")
-    print("You lose")
-    print("All the chances are exhausted")
-
-# Print the correct word at the end of the game
-print("The correct word is:", word)
-
+    print("Unable to start the game due to the errors above.")
